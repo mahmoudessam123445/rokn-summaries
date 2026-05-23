@@ -1,0 +1,246 @@
+// ===== Firebase Configuration =====
+// REPLACE THIS WITH YOUR ACTUAL FIREBASE DATABASE URL
+// This URL is public - anyone can read summaries from it
+const FIREBASE_DATABASE_URL = 'https://YOUR-PROJECT-default-rtdb.firebaseio.com/';
+
+let summariesData = [];
+let isLoading = false;
+
+// ===== Password Modal =====
+const CORRECT_PASSWORD = 'rokn2026';
+
+function openPasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    const input = document.getElementById('passwordInput');
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+    const errorMsg = document.getElementById('errorMsg');
+    if (errorMsg) errorMsg.textContent = '';
+}
+
+function closePasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function checkPassword() {
+    const input = document.getElementById('passwordInput');
+    const errorMsg = document.getElementById('errorMsg');
+    if (!input || !errorMsg) return;
+
+    const password = input.value.trim();
+
+    if (!password) {
+        errorMsg.textContent = '⚠️ يرجى إدخال كلمة المرور';
+        input.focus();
+        return;
+    }
+
+    if (password === CORRECT_PASSWORD) {
+        closePasswordModal();
+        window.location.href = 'add-summary.html';
+    } else {
+        errorMsg.textContent = '❌ كلمة المرور غير صحيحة، حاول مرة أخرى';
+        input.value = '';
+        input.focus();
+
+        const modalContent = document.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.style.animation = 'none';
+            setTimeout(() => {
+                modalContent.style.animation = 'shake 0.5s ease';
+            }, 10);
+        }
+    }
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        checkPassword();
+    }
+    if (event.key === 'Escape') {
+        closePasswordModal();
+    }
+}
+
+// Close modal on overlay click
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('passwordModal');
+    if (event.target === modal) {
+        closePasswordModal();
+    }
+});
+
+// Add shake animation
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+        20%, 40%, 60%, 80% { transform: translateX(8px); }
+    }
+`;
+document.head.appendChild(shakeStyle);
+
+// ===== Firebase API Functions =====
+
+async function fetchSummaries() {
+    // Use the hardcoded public URL - anyone can read
+    const dbUrl = FIREBASE_DATABASE_URL;
+
+    if (!dbUrl || dbUrl.includes('YOUR-PROJECT')) {
+        console.error('Firebase URL not configured! Please update FIREBASE_DATABASE_URL in script.js');
+        const summariesList = document.getElementById('summariesList');
+        if (summariesList) {
+            summariesList.innerHTML = `
+                <div class="error-state" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
+                    <h3 style="color: var(--danger); margin-bottom: 10px;">لم يتم إعداد قاعدة البيانات</h3>
+                    <p style="color: var(--text-medium);">الموقع لم يتم إعداده بعد. يرجى الاتصال بالمسؤول.</p>
+                </div>
+            `;
+        }
+        return [];
+    }
+
+    try {
+        const response = await fetch(`${dbUrl}summaries.json`, {
+            method: 'GET'
+        });
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                return [];
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (!data) return [];
+
+        // Firebase returns object with keys, convert to array
+        const summaries = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key]
+        }));
+
+        // Sort by date (newest first)
+        return summaries.sort((a, b) => {
+            const dateA = new Date(a.uploadedAt || 0);
+            const dateB = new Date(b.uploadedAt || 0);
+            return dateB - dateA;
+        });
+    } catch (error) {
+        console.error('Error fetching summaries:', error);
+        const summariesList = document.getElementById('summariesList');
+        if (summariesList) {
+            summariesList.innerHTML = `
+                <div class="error-state" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
+                    <h3 style="color: var(--danger); margin-bottom: 10px;">مشكلة في الاتصال</h3>
+                    <p style="color: var(--text-medium);">${escapeHtml(error.message)}</p>
+                </div>
+            `;
+        }
+        return [];
+    }
+}
+
+// ===== Load Summaries (for summaries.html) =====
+async function loadSummaries() {
+    const summariesList = document.getElementById('summariesList');
+    const emptyState = document.getElementById('emptyState');
+
+    if (!summariesList) return;
+
+    // Show loading
+    summariesList.innerHTML = `
+        <div class="loading-state" style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+            <div class="loading-spinner" style="width: 50px; height: 50px; border: 4px solid var(--primary-light); 
+                 border-top-color: var(--primary); border-radius: 50%; 
+                 animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <p style="color: var(--text-medium);">جاري تحميل الملخصات...</p>
+        </div>
+    `;
+
+    const spinStyle = document.createElement('style');
+    spinStyle.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+    document.head.appendChild(spinStyle);
+
+    try {
+        summariesData = await fetchSummaries();
+
+        if (summariesData.length === 0) {
+            summariesList.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            return;
+        }
+
+        summariesList.style.display = 'grid';
+        if (emptyState) emptyState.style.display = 'none';
+        summariesList.innerHTML = '';
+
+        summariesData.forEach((summary, index) => {
+            const card = document.createElement('div');
+            card.className = 'summary-card';
+
+            const title = escapeHtml(summary.title || summary.fileName || 'ملخص بدون عنوان');
+            const desc = escapeHtml(summary.description || 'لا يوجد وصف');
+            const date = summary.date || (summary.uploadedAt ? new Date(summary.uploadedAt).toLocaleDateString('ar-EG') : 'غير معروف');
+            const subject = escapeHtml(summary.subject || 'عام');
+            const fileData = summary.fileData || '';
+            const fileName = escapeHtml(summary.fileName || 'file');
+
+            card.innerHTML = `
+                <div class="summary-icon">📄</div>
+                <h3 class="summary-title">${title}</h3>
+                <p class="summary-desc">${desc}</p>
+                <div class="summary-meta">
+                    <span class="summary-date">📅 ${date}</span>
+                    <span class="summary-subject">📚 ${subject}</span>
+                </div>
+                <div class="summary-actions">
+                    <a href="${fileData}" download="${fileName}" class="download-btn">⬇️ تحميل</a>
+                    <button class="view-btn" onclick="viewFile('${fileData}', '${fileName}')">👁️ عرض</button>
+                </div>
+            `;
+            summariesList.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Error loading summaries:', error);
+    } finally {
+        isLoading = false;
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function viewFile(fileData, fileName) {
+    const ext = (fileName || '').split('.').pop().toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+        const newWindow = window.open();
+        newWindow.document.write(`<img src="${fileData}" style="max-width:100%;height:auto;">`);
+    } else if (ext === 'pdf') {
+        const newWindow = window.open();
+        newWindow.document.write(`<iframe src="${fileData}" width="100%" height="100%" style="border:none;"></iframe>`);
+    } else {
+        window.open(fileData, '_blank');
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('summariesList')) {
+        loadSummaries();
+    }
+});

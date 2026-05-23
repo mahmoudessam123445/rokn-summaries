@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض الملخصات - ركن الملخصات</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .refresh-btn {
+            background: var(--white);
+            border: 2px solid var(--primary-light);
+            border-radius: var(--radius-sm);
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            margin-right: auto;
+        }
+        .refresh-btn:hover {
+            background: var(--primary-light);
+            transform: rotate(180deg);
+        }
+        .loading-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--primary-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--white);
+            border-radius: var(--radius);
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logos-container">
+                <div class="logo-item">
+                    <img src="assets/logo1.jpg" alt="المعهد العالي للهندسة والتكنولوجيا" class="logo-img">
+                </div>
+                <div class="header-title">
+                    <h1>📚 ركن الملخصات</h1>
+                    <p class="subtitle">ملخصاتي الدراسية</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <a href="index.html" class="back-btn">← الرئيسية</a>
+                <h2>📖 الملخصات المتاحة</h2>
+                <button onclick="loadSummaries()" class="refresh-btn" title="تحديث">🔄</button>
+            </div>
+
+            <div id="summariesList" class="summaries-grid">
+                <!-- Summaries will be loaded here dynamically from JSONBin.io -->
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📂</div>
+                <h3>لا توجد ملخصات حالياً</h3>
+                <p>المحتوى هيتضاف قريباً، ترقبوا!</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="dedication">
+                <div class="dedication-line"></div>
+                <p class="dedication-text">
+                    إهداء من الطالبين : <br><strong>Mahmoud Elghobashy</strong>  &  <strong>Ebrahim Elgabarony</strong> 
+                </p>
+                <div class="dedication-line"></div>
+            </div>
+            <p class="copyright">© 2026 ركن الملخصات - جميع الحقوق محفوظة</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
