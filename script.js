@@ -314,7 +314,10 @@ function viewFile(fileData, fileName) {
     } 
     // For PDFs - use iframe
     else if (ext === 'pdf') {
-        window.open(fileData, '_blank');
+      const link = document.createElement('a');
+link.href = fileData;
+link.download = fileName;
+link.click();
     } 
     // For other files - try to open directly
     else {
