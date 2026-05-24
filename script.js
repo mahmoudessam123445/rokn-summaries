@@ -1,6 +1,5 @@
 // ===== Firebase Configuration =====
-// REPLACE THIS WITH YOUR ACTUAL FIREBASE DATABASE URL
-// This URL is public - anyone can read summaries from it
+// ⚠️ IMPORTANT: Replace this with your actual Firebase Database URL!
 const FIREBASE_DATABASE_URL = 'https://rokn-summaries-default-rtdb.firebaseio.com/';
 
 let summariesData = [];
@@ -86,24 +85,21 @@ shakeStyle.textContent = `
 `;
 document.head.appendChild(shakeStyle);
 
+// ===== Admin Mode Detection =====
+// Check if admin is logged in (has Firebase URL in localStorage)
+function isAdmin() {
+    return !!localStorage.getItem('firebaseDatabaseURL');
+}
+
 // ===== Firebase API Functions =====
 
 async function fetchSummaries() {
-    // Use the hardcoded public URL - anyone can read
     const dbUrl = FIREBASE_DATABASE_URL;
 
     if (!dbUrl || dbUrl.includes('YOUR-PROJECT')) {
-        console.error('Firebase URL not configured! Please update FIREBASE_DATABASE_URL in script.js');
-        const summariesList = document.getElementById('summariesList');
-        if (summariesList) {
-            summariesList.innerHTML = `
-                <div class="error-state" style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                    <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
-                    <h3 style="color: var(--danger); margin-bottom: 10px;">لم يتم إعداد قاعدة البيانات</h3>
-                    <p style="color: var(--text-medium);">الموقع لم يتم إعداده بعد. يرجى الاتصال بالمسؤول.</p>
-                </div>
-            `;
-        }
+        console.error('❌ Firebase URL not configured!');
+        showErrorOnPage('لم يتم إعداد قاعدة البيانات', 
+            'الرجاء تعديل ملف script.js واستبدال YOUR-PROJECT باسم مشروعك في Firebase');
         return [];
     }
 
@@ -115,6 +111,11 @@ async function fetchSummaries() {
         if (!response.ok) {
             if (response.status === 404) {
                 return [];
+            }
+            if (response.status === 401 || response.status === 403) {
+                showErrorOnPage('مشكلة في الصلاحيات', 
+                    'تأكد من Firebase Rules - لازم تكون ".read": true');
+                throw new Error(`Permission denied (${response.status})`);
             }
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -136,18 +137,60 @@ async function fetchSummaries() {
             return dateB - dateA;
         });
     } catch (error) {
-        console.error('Error fetching summaries:', error);
-        const summariesList = document.getElementById('summariesList');
-        if (summariesList) {
-            summariesList.innerHTML = `
-                <div class="error-state" style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                    <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
-                    <h3 style="color: var(--danger); margin-bottom: 10px;">مشكلة في الاتصال</h3>
-                    <p style="color: var(--text-medium);">${escapeHtml(error.message)}</p>
-                </div>
-            `;
-        }
+        console.error('❌ Error fetching summaries:', error);
+        showErrorOnPage('مشكلة في الاتصال', error.message);
         return [];
+    }
+}
+
+async function deleteSummary(summaryId) {
+    const dbUrl = localStorage.getItem('firebaseDatabaseURL') || FIREBASE_DATABASE_URL;
+
+    if (!dbUrl || dbUrl.includes('YOUR-PROJECT')) {
+        alert('❌ مفيش Firebase URL محفوظ. روح لصفحة الإضافة وسجل دخول أولاً.');
+        return false;
+    }
+
+    if (!confirm('⚠️ هل أنت متأكد إنك عايز تمسح الملخص ده؟')) {
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${dbUrl}summaries/${summaryId}.json`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to delete: ${response.status}`);
+        }
+
+        // Refresh the list
+        await loadSummaries();
+        return true;
+    } catch (error) {
+        console.error('❌ Error deleting summary:', error);
+        alert('❌ حدث خطأ أثناء الحذف: ' + error.message);
+        return false;
+    }
+}
+
+function showErrorOnPage(title, message) {
+    const summariesList = document.getElementById('summariesList');
+    if (summariesList) {
+        summariesList.innerHTML = `
+            <div class="error-state" style="grid-column: 1/-1; text-align: center; padding: 40px; background: var(--white); border-radius: var(--radius);">
+                <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
+                <h3 style="color: var(--danger); margin-bottom: 10px;">${escapeHtml(title)}</h3>
+                <p style="color: var(--text-medium); margin-bottom: 15px;">${escapeHtml(message)}</p>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: right; direction: ltr;">
+                    <p style="font-size: 0.85rem; color: var(--text-light); margin: 0;">
+                        <strong>Debug info:</strong><br>
+                        URL: ${FIREBASE_DATABASE_URL}<br>
+                        Check browser console (F12) for more details
+                    </p>
+                </div>
+            </div>
+        `;
     }
 }
 
@@ -174,6 +217,7 @@ async function loadSummaries() {
 
     try {
         summariesData = await fetchSummaries();
+        const admin = isAdmin();
 
         if (summariesData.length === 0) {
             summariesList.style.display = 'none';
@@ -196,6 +240,13 @@ async function loadSummaries() {
             const fileData = summary.fileData || '';
             const fileName = escapeHtml(summary.fileName || 'file');
 
+            // Add delete button only for admin
+            const deleteButton = admin ? `
+                <button class="delete-btn" onclick="deleteSummary('${summary.id}')" title="حذف الملخص">
+                    🗑️ حذف
+                </button>
+            ` : '';
+
             card.innerHTML = `
                 <div class="summary-icon">📄</div>
                 <h3 class="summary-title">${title}</h3>
@@ -207,12 +258,15 @@ async function loadSummaries() {
                 <div class="summary-actions">
                     <a href="${fileData}" download="${fileName}" class="download-btn">⬇️ تحميل</a>
                     <button class="view-btn" onclick="viewFile('${fileData}', '${fileName}')">👁️ عرض</button>
+                    ${deleteButton}
                 </div>
             `;
             summariesList.appendChild(card);
         });
+
+        console.log('✅ Loaded', summariesData.length, 'summaries. Admin mode:', admin);
     } catch (error) {
-        console.error('Error loading summaries:', error);
+        console.error('❌ Error in loadSummaries:', error);
     } finally {
         isLoading = false;
     }
