@@ -314,25 +314,7 @@ function viewFile(fileData, fileName) {
     } 
     // For PDFs - use iframe
     else if (ext === 'pdf') {
-        const newWindow = window.open('about:blank', '_blank');
-        if (newWindow) {
-            newWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>${fileName}</title>
-                    <style>
-                        body { margin: 0; overflow: hidden; }
-                        iframe { width: 100vw; height: 100vh; border: none; }
-                    </style>
-                </head>
-                <body>
-                    <iframe src="${fileData}" title="${fileName}"></iframe>
-                </body>
-                </html>
-            `);
-            newWindow.document.close();
-        }
+        window.open(fileData, '_blank');
     } 
     // For other files - try to open directly
     else {
