@@ -1,7 +1,7 @@
 // ===== Firebase Configuration =====
 // REPLACE THIS WITH YOUR ACTUAL FIREBASE DATABASE URL
 // This URL is public - anyone can read summaries from it
-const FIREBASE_DATABASE_URL = 'https://YOUR-PROJECT-default-rtdb.firebaseio.com/';
+const FIREBASE_DATABASE_URL = 'https://rokn-summaries-default-rtdb.firebaseio.com/';
 
 let summariesData = [];
 let isLoading = false;
