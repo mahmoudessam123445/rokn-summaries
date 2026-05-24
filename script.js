@@ -312,13 +312,13 @@ function viewFile(fileData, fileName) {
             newWindow.document.close();
         }
     } 
-    // For PDFs - use iframe
-    else if (ext === 'pdf') {
+   
+   
       const link = document.createElement('a');
 link.href = fileData;
 link.download = fileName;
 link.click();
-    } 
+    }
     // For other files - try to open directly
     else {
         // Create a temporary link and click it
