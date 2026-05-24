@@ -810,145 +810,50 @@ body {
 }
 
 
-/* ===== Setup Page Styles ===== */
-.config-check {
-    margin-bottom: 25px;
-}
-
-.config-alert {
-    background: linear-gradient(135deg, #fff3cd, #ffeeba);
-    border: 2px solid #ffc107;
-    border-radius: var(--radius);
-    padding: 25px;
-    text-align: center;
-}
-
-.config-alert p {
-    color: #856404;
-    font-weight: 700;
-    margin-bottom: 15px;
-    font-size: 1.1rem;
-}
-
-/* ===== Error Message Box ===== */
-.error-message-box {
-    text-align: center;
-    padding: 40px 20px;
-    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-    border-radius: var(--radius);
-    border: 2px solid var(--danger);
-}
-
-.error-icon {
-    font-size: 4rem;
-    margin-bottom: 15px;
-}
-
-.error-message-box h3 {
-    color: var(--danger);
-    margin-bottom: 10px;
-}
-
-.error-message-box p {
-    color: var(--text-medium);
-    margin-bottom: 20px;
-}
-
-/* ===== Token Input Hint ===== */
-.token-hint {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    margin-top: 5px;
-}
-
-/* ===== Refresh Button ===== */
-.refresh-btn {
-    background: var(--white);
-    border: 2px solid var(--primary-light);
-    border-radius: var(--radius-sm);
-    padding: 8px 14px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: var(--transition);
-    margin-right: auto;
-}
-
-.refresh-btn:hover {
-    background: var(--primary-light);
-    transform: rotate(180deg);
-}
-
-/* ===== Loading State ===== */
-.loading-state {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 60px 20px;
-}
-
-.loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid var(--primary-light);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 20px;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* ===== Error State ===== */
-.error-state {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 40px 20px;
-    background: var(--white);
-    border-radius: var(--radius);
-}
-
-/* ===== Setup Banner ===== */
-.setup-banner {
-    background: linear-gradient(135deg, #fff3cd, #ffeeba);
-    border: 2px solid #ffc107;
-    border-radius: var(--radius);
-    padding: 15px 20px;
-    margin-bottom: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.setup-banner p {
-    color: #856404;
-    font-weight: 600;
-    margin: 0;
-}
-
-.setup-banner a {
-    background: var(--primary);
+/* ===== Delete Button ===== */
+.delete-btn {
+    background: linear-gradient(135deg, #e01b24, #c01a1f);
     color: var(--white);
-    padding: 8px 18px;
-    border-radius: 20px;
-    text-decoration: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 15px;
+    font-family: 'Cairo', sans-serif;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    cursor: pointer;
     transition: var(--transition);
+    text-align: center;
+    flex: 1;
 }
 
-.setup-banner a:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+.delete-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(224, 27, 36, 0.3);
 }
 
-.config-ok {
-    background: linear-gradient(135deg, #d4edda, #c3e6cb) !important;
-    border-color: #28a745 !important;
+/* Admin badge */
+.admin-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--secondary), #b8941f);
+    color: var(--white);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-right: 8px;
+    vertical-align: middle;
 }
 
-.config-ok p {
-    color: #155724 !important;
+/* Summary actions with 3 buttons */
+.summary-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.summary-actions .download-btn,
+.summary-actions .view-btn,
+.summary-actions .delete-btn {
+    flex: 1;
+    min-width: 80px;
 }
