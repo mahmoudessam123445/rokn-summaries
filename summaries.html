@@ -45,7 +45,22 @@
             background: var(--white);
             border-radius: var(--radius);
         }
+        .admin-indicator {
+            background: linear-gradient(135deg, var(--secondary), #b8941f);
+            color: var(--white);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            gap: 5px;
+        }
+        .admin-indicator.visible {
+            display: inline-flex;
+        }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="page-wrapper">
@@ -67,11 +82,12 @@
             <div class="page-header">
                 <a href="index.html" class="back-btn">← الرئيسية</a>
                 <h2>📖 الملخصات المتاحة</h2>
+                <span id="adminBadge" class="admin-indicator">👑 أنت مسؤول</span>
                 <button onclick="loadSummaries()" class="refresh-btn" title="تحديث">🔄</button>
             </div>
 
             <div id="summariesList" class="summaries-grid">
-                <!-- Summaries will be loaded here dynamically from JSONBin.io -->
+                <!-- Summaries will be loaded here dynamically from Firebase -->
             </div>
 
             <div id="emptyState" class="empty-state" style="display: none;">
@@ -95,5 +111,15 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+        // Show admin badge if logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const hasUrl = localStorage.getItem('firebaseDatabaseURL');
+            const badge = document.getElementById('adminBadge');
+            if (hasUrl && badge) {
+                badge.classList.add('visible');
+            }
+        });
+    </script>
 </body>
 </html>
