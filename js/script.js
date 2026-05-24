@@ -117,7 +117,6 @@ async function fetchSummaries() {
         summaries.push({ id: key, ...data[key] });
     }
 
-    // Sort by date (newest first)
     return summaries.sort((a, b) => {
         const dateA = new Date(a.uploadedAt || 0);
         const dateB = new Date(b.uploadedAt || 0);
@@ -127,104 +126,81 @@ async function fetchSummaries() {
 
 // ===== Delete Summary =====
 async function deleteSummary(summaryId) {
-    if (!confirm('⚠️ هل أنت متأكد إنك عايز تمسح الملخص ده؟')) {
-        return;
-    }
+    if (!confirm('هل أنت متأكد؟')) return;
 
     const dbUrl = localStorage.getItem('firebaseDatabaseURL') || FIREBASE_DATABASE_URL;
 
     try {
-        const response = await fetch(dbUrl + 'summaries/' + summaryId + '.json', {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to delete');
-        }
-
+        await fetch(dbUrl + 'summaries/' + summaryId + '.json', { method: 'DELETE' });
         await loadSummaries();
-        alert('✅ تم الحذف بنجاح!');
     } catch (error) {
         console.error('Delete error:', error);
-        alert('❌ حدث خطأ أثناء الحذف');
+        alert('حدث خطأ أثناء الحذف');
     }
 }
 
 // ===== View File =====
-function viewFile(fileData, fileName) {
+function viewFile(fileUrl, fileName) {
+    if (!fileUrl) return;
+
     const ext = (fileName || '').split('.').pop().toLowerCase();
 
-    // Check if it's a URL (from Storage) or base64
-    const isUrl = fileData && fileData.startsWith('http');
-
-    // Images - show in new window
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-        const newWindow = window.open('about:blank', '_blank');
-        if (newWindow) {
-            newWindow.document.write('<!DOCTYPE html><html><head><title>' + fileName + '</title><style>body{margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;}img{max-width:95%;max-height:95vh;box-shadow:0 4px 20px rgba(0,0,0,0.3);}</style></head><body><img src="' + fileData + '"></body></html>');
-            newWindow.document.close();
+        const w = window.open('about:blank', '_blank');
+        if (w) {
+            w.document.write('<!DOCTYPE html><html><head><title>' + fileName + '</title><style>body{margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;}img{max-width:95%;max-height:95vh;}</style></head><body><img src="' + fileUrl + '"></body></html>');
+            w.document.close();
         }
-    } 
-    // PDFs - open in new tab (works for both URLs and base64)
-    else if (ext === 'pdf') {
-        window.open(fileData, '_blank');
-    }
-    // Other files - download
-    else {
-        const link = document.createElement('a');
-        link.href = fileData;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    } else {
+        window.open(fileUrl, '_blank');
     }
 }
 
 // ===== Load Summaries =====
 async function loadSummaries() {
-    const summariesList = document.getElementById('summariesList');
-    const emptyState = document.getElementById('emptyState');
+    const list = document.getElementById('summariesList');
+    const empty = document.getElementById('emptyState');
 
-    if (!summariesList) return;
+    if (!list) return;
 
-    summariesList.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;"><div style="width:50px;height:50px;border:4px solid #e8f0fe;border-top-color:#1a5fb4;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div><p style="color:#4a4a4a;">جاري تحميل الملخصات...</p></div>';
+    list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;"><div style="width:50px;height:50px;border:4px solid #e8f0fe;border-top-color:#1a5fb4;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div><p>جاري التحميل...</p></div>';
 
-    const spinStyle = document.createElement('style');
-    spinStyle.textContent = '@keyframes spin{to{transform:rotate(360deg);}}';
-    document.head.appendChild(spinStyle);
+    const s = document.createElement('style');
+    s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(s);
 
     try {
         const summaries = await fetchSummaries();
         const admin = isAdmin();
 
         if (summaries.length === 0) {
-            summariesList.style.display = 'none';
-            if (emptyState) emptyState.style.display = 'block';
+            list.style.display = 'none';
+            if (empty) empty.style.display = 'block';
             return;
         }
 
-        summariesList.style.display = 'grid';
-        if (emptyState) emptyState.style.display = 'none';
-        summariesList.innerHTML = '';
+        list.style.display = 'grid';
+        if (empty) empty.style.display = 'none';
+        list.innerHTML = '';
 
         summaries.forEach((summary) => {
             const card = document.createElement('div');
             card.className = 'summary-card';
 
-            const title = escapeHtml(summary.title || summary.fileName || 'ملخص بدون عنوان');
-            const desc = escapeHtml(summary.description || 'لا يوجد وصف');
-            const date = summary.date || (summary.uploadedAt ? new Date(summary.uploadedAt).toLocaleDateString('ar-EG') : 'غير معروف');
+            const title = escapeHtml(summary.title || summary.fileName || 'ملخص');
+            const desc = escapeHtml(summary.description || '');
+            const date = summary.date || 'غير معروف';
             const subject = escapeHtml(summary.subject || 'عام');
             const fileUrl = summary.fileUrl || summary.fileData || '';
             const fileName = escapeHtml(summary.fileName || 'file');
-            const isPDF = (fileName || '').toLowerCase().endsWith('.pdf');
 
-            let deleteBtn = '';
+            let delBtn = '';
             if (admin) {
-                deleteBtn = '<button class="delete-btn" onclick="deleteSummary('' + summary.id + '')" title="حذف الملخص">🗑️ حذف</button>';
+                delBtn = '<button class="delete-btn" onclick="deleteSummary('' + summary.id + '')">🗑️ حذف</button>';
             }
 
-            card.innerHTML = '<div class="summary-icon">📄</div>' +
+            card.innerHTML = 
+                '<div class="summary-icon">📄</div>' +
                 '<h3 class="summary-title">' + title + '</h3>' +
                 '<p class="summary-desc">' + desc + '</p>' +
                 '<div class="summary-meta">' +
@@ -233,22 +209,22 @@ async function loadSummaries() {
                 '</div>' +
                 '<div class="summary-actions">' +
                     '<a href="' + fileUrl + '" download="' + fileName + '" class="download-btn">⬇️ تحميل</a>' +
-                    '<button class="view-btn" data-action="view">' + (isPDF ? '⬇️ تحميل' : '👁️ عرض') + '</button>' +
-                    deleteBtn +
+                    '<button class="view-btn">👁️ عرض</button>' +
+                    delBtn +
                 '</div>';
 
-            const viewBtn = card.querySelector('[data-action="view"]');
-            if (viewBtn) {
-                viewBtn.addEventListener('click', function() {
-                    viewFile(fileData, fileName);
+            const btn = card.querySelector('.view-btn');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    viewFile(fileUrl, fileName);
                 });
             }
 
-            summariesList.appendChild(card);
+            list.appendChild(card);
         });
     } catch (error) {
         console.error('Error:', error);
-        summariesList.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;"><div style="font-size:3rem;margin-bottom:15px;">⚠️</div><h3 style="color:#e01b24;margin-bottom:10px;">مشكلة في الاتصال</h3><p style="color:#4a4a4a;">' + escapeHtml(error.message) + '</p></div>';
+        list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;"><h3 style="color:#e01b24;">خطأ</h3><p>' + escapeHtml(error.message) + '</p></div>';
     }
 }
 
