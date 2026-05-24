@@ -257,11 +257,19 @@ async function loadSummaries() {
                 </div>
                 <div class="summary-actions">
                     <a href="${fileData}" download="${fileName}" class="download-btn">⬇️ تحميل</a>
-                    <button class="view-btn" onclick="viewFile('${fileData}', '${fileName}')">👁️ عرض</button>
+                    <button class="view-btn" data-index="${index}">👁️ عرض</button>
                     ${deleteButton}
                 </div>
             `;
-            summariesList.appendChild(card);
+            // Add click event for view button
+                const viewBtn = card.querySelector('.view-btn');
+                if (viewBtn) {
+                    viewBtn.addEventListener('click', function() {
+                        viewFile(fileData, fileName);
+                    });
+                }
+
+                summariesList.appendChild(card);
         });
 
         console.log('✅ Loaded', summariesData.length, 'summaries. Admin mode:', admin);
@@ -281,14 +289,61 @@ function escapeHtml(text) {
 
 function viewFile(fileData, fileName) {
     const ext = (fileName || '').split('.').pop().toLowerCase();
+
+    // For images - open in new tab with proper HTML
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-        const newWindow = window.open();
-        newWindow.document.write(`<img src="${fileData}" style="max-width:100%;height:auto;">`);
-    } else if (ext === 'pdf') {
-        const newWindow = window.open();
-        newWindow.document.write(`<iframe src="${fileData}" width="100%" height="100%" style="border:none;"></iframe>`);
-    } else {
-        window.open(fileData, '_blank');
+        const newWindow = window.open('about:blank', '_blank');
+        if (newWindow) {
+            newWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${fileName}</title>
+                    <style>
+                        body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0; }
+                        img { max-width: 95%; max-height: 95vh; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+                    </style>
+                </head>
+                <body>
+                    <img src="${fileData}" alt="${fileName}">
+                </body>
+                </html>
+            `);
+            newWindow.document.close();
+        }
+    } 
+    // For PDFs - use iframe
+    else if (ext === 'pdf') {
+        const newWindow = window.open('about:blank', '_blank');
+        if (newWindow) {
+            newWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${fileName}</title>
+                    <style>
+                        body { margin: 0; overflow: hidden; }
+                        iframe { width: 100vw; height: 100vh; border: none; }
+                    </style>
+                </head>
+                <body>
+                    <iframe src="${fileData}" title="${fileName}"></iframe>
+                </body>
+                </html>
+            `);
+            newWindow.document.close();
+        }
+    } 
+    // For other files - try to open directly
+    else {
+        // Create a temporary link and click it
+        const link = document.createElement('a');
+        link.href = fileData;
+        link.target = '_blank';
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 }
 
