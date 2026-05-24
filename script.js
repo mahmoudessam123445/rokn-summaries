@@ -312,13 +312,28 @@ function viewFile(fileData, fileName) {
             newWindow.document.close();
         }
     } 
-   
-   
-      const link = document.createElement('a');
-link.href = fileData;
-link.download = fileName;
-link.click();
-    }
+    // For PDFs - use iframe
+    else if (ext === 'pdf') {
+        const newWindow = window.open('about:blank', '_blank');
+        if (newWindow) {
+            newWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${fileName}</title>
+                    <style>
+                        body { margin: 0; overflow: hidden; }
+                        iframe { width: 100vw; height: 100vh; border: none; }
+                    </style>
+                </head>
+                <body>
+                    <iframe src="${fileData}" title="${fileName}"></iframe>
+                </body>
+                </html>
+            `);
+            newWindow.document.close();
+        }
+    } 
     // For other files - try to open directly
     else {
         // Create a temporary link and click it
