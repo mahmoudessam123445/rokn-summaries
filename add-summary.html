@@ -37,6 +37,27 @@
             color: var(--text-light);
             margin-top: 5px;
         }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+            display: none;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent), #26a269);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
         .setup-note {
             background: #e8f4fd;
             border: 1px solid #bee5eb;
@@ -55,7 +76,7 @@
         <header class="main-header">
             <div class="logos-container">
                 <div class="logo-item">
-                    <img src="logo1.jpg" alt="المعهد العالي للهندسة والتكنولوجيا" class="logo-img">
+                    <img src="assets/logo1.jpg" alt="المعهد العالي للهندسة والتكنولوجيا" class="logo-img">
                 </div>
                 <div class="header-title">
                     <h1>📚 ركن الملخصات</h1>
@@ -77,11 +98,6 @@
                     <div style="font-size: 3rem; margin-bottom: 15px;">🔐</div>
                     <h3 style="color: var(--primary-dark); margin-bottom: 10px;">تسجيل دخول المسؤول</h3>
                     <p style="color: var(--text-medium); margin-bottom: 20px;">أدخل Firebase Database URL عشان تقدر تضيف ملخصات</p>
-
-                    <div class="setup-note">
-                        <strong>💡 ملاحظة:</strong> الـ URL ده نفسه اللي في ملف <code>script.js</code> (الجزء العلني للقراءة). 
-                        الموقع بيستخدم نفس قاعدة البيانات للقراءة والكتابة.
-                    </div>
 
                     <div class="form-group" style="text-align: right;">
                         <label>🔗 Firebase Database URL:</label>
@@ -136,6 +152,11 @@
                             </div>
                         </div>
 
+                        <!-- Progress Bar -->
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill">0%</div>
+                        </div>
+
                         <button type="submit" class="submit-summary-btn" id="submitBtn">
                             <span class="btn-text">✅ إضافة الملخص</span>
                             <span class="btn-loading" style="display:none;">⏳ جاري الرفع...</span>
@@ -175,15 +196,18 @@
         </footer>
     </div>
 
-    <script src="js/script.js"></script>
+    <script src="script.js"></script>
     <script>
+        // ===== Cloudinary Configuration =====
+        // Using unsigned upload preset for simplicity
+        const CLOUDINARY_CLOUD_NAME = 'rokn_summaries'; // Replace with your Cloudinary cloud name
+        const CLOUDINARY_UPLOAD_PRESET = 'rokn_summaries'; // Replace with your unsigned upload preset
+
         let selectedFile = null;
-        let fileData = null;
 
         // Check if already logged in
         document.addEventListener('DOMContentLoaded', function() {
             const hasUrl = localStorage.getItem('firebaseDatabaseURL');
-
             if (hasUrl) {
                 showAdminForm();
             }
@@ -204,27 +228,20 @@
                 return;
             }
 
-            // Validate URL format
             if (!dbUrl.startsWith('https://') || !dbUrl.includes('firebaseio.com')) {
-                errorDiv.textContent = '❌ الرابط مش صحيح. لازم يبدأ بـ https:// ويحتوي على firebaseio.com';
+                errorDiv.textContent = '❌ الرابط مش صحيح';
                 errorDiv.style.display = 'block';
                 return;
             }
 
-            // Ensure URL ends with /
             const cleanUrl = dbUrl.endsWith('/') ? dbUrl : dbUrl + '/';
 
-            // Test connection
             errorDiv.textContent = '⏳ جاري التحقق...';
             errorDiv.style.display = 'block';
             errorDiv.style.color = 'var(--primary)';
 
             try {
-                const response = await fetch(`${cleanUrl}summaries.json`, {
-                    method: 'GET'
-                });
-
-                // 200 or 404 (empty) are both OK
+                const response = await fetch(cleanUrl + 'summaries.json');
                 if (response.ok || response.status === 404) {
                     localStorage.setItem('firebaseDatabaseURL', cleanUrl);
                     showAdminForm();
@@ -248,12 +265,6 @@
             document.getElementById('fileInfo').style.display = 'flex';
             document.getElementById('fileName').textContent = file.name;
             document.getElementById('fileSize').textContent = formatFileSize(file.size);
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                fileData = e.target.result;
-            };
-            reader.readAsDataURL(file);
         }
 
         function formatFileSize(bytes) {
@@ -267,18 +278,27 @@
         async function handleSubmit(event) {
             event.preventDefault();
 
-            if (!selectedFile || !fileData) {
+            if (!selectedFile) {
                 alert('يرجى اختيار ملف أولاً!');
+                return false;
+            }
+
+            // Check Cloudinary config
+            if (CLOUDINARY_CLOUD_NAME === 'YOUR_CLOUD_NAME') {
+                showError('❌ لازم تضبط Cloudinary أولاً! افتح ملف add-summary.html وغير YOUR_CLOUD_NAME وYOUR_UPLOAD_PRESET.');
                 return false;
             }
 
             const btn = document.getElementById('submitBtn');
             const btnText = btn.querySelector('.btn-text');
             const btnLoading = btn.querySelector('.btn-loading');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
 
             btnText.style.display = 'none';
             btnLoading.style.display = 'inline';
             btn.disabled = true;
+            progressBar.style.display = 'block';
 
             const dbUrl = localStorage.getItem('firebaseDatabaseURL');
 
@@ -288,22 +308,52 @@
             }
 
             try {
-                // Create summary object
+                // Step 1: Upload to Cloudinary
+                console.log('Uploading to Cloudinary...');
+                progressFill.style.width = '30%';
+                progressFill.textContent = '30%';
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                formData.append('folder', 'rokn_summaries');
+
+                const cloudinaryResponse = await fetch(
+                    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
+                    {
+                        method: 'POST',
+                        body: formData
+                    }
+                );
+
+                if (!cloudinaryResponse.ok) {
+                    const error = await cloudinaryResponse.json();
+                    throw new Error(error.error?.message || 'Cloudinary upload failed');
+                }
+
+                const cloudinaryResult = await cloudinaryResponse.json();
+                console.log('Cloudinary result:', cloudinaryResult);
+
+                progressFill.style.width = '70%';
+                progressFill.textContent = '70%';
+
+                // Step 2: Save to Firebase Database
+                const fileUrl = cloudinaryResult.secure_url;
+
                 const summary = {
                     title: document.getElementById('title').value.trim(),
                     subject: document.getElementById('subject').value.trim(),
                     description: document.getElementById('description').value.trim(),
                     fileName: selectedFile.name,
-                    fileData: fileData,
+                    fileUrl: fileUrl,
                     fileType: selectedFile.type,
                     fileSize: selectedFile.size,
+                    cloudinaryPublicId: cloudinaryResult.public_id,
                     date: new Date().toLocaleDateString('ar-EG'),
                     uploadedAt: new Date().toISOString()
                 };
 
-                // Save to Firebase
-                console.log('Saving to Firebase...');
-                const response = await fetch(`${dbUrl}summaries.json`, {
+                const dbResponse = await fetch(dbUrl + 'summaries.json', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -311,10 +361,12 @@
                     body: JSON.stringify(summary)
                 });
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || `Failed to save: ${response.status}`);
+                if (!dbResponse.ok) {
+                    throw new Error('Failed to save to database');
                 }
+
+                progressFill.style.width = '100%';
+                progressFill.textContent = '100%';
 
                 // Show success
                 document.getElementById('addSummaryForm').style.display = 'none';
@@ -323,11 +375,16 @@
 
             } catch (error) {
                 console.error('Upload error:', error);
-                showError('❌ ' + (error.message || 'حدث خطأ أثناء الرفع. تأكد من صحة Firebase URL وصلاحيات الكتابة.'));
+                showError('❌ ' + error.message);
             } finally {
                 btnText.style.display = 'inline';
                 btnLoading.style.display = 'none';
                 btn.disabled = false;
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressFill.style.width = '0%';
+                    progressFill.textContent = '0%';
+                }, 1000);
             }
 
             return false;
@@ -347,8 +404,8 @@
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('uploadPlaceholder').style.display = 'block';
             document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('progressBar').style.display = 'none';
             selectedFile = null;
-            fileData = null;
         }
 
         // Drag and drop support
