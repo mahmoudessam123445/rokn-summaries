@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> 📚 مرحباً بكم في  - ركن الملخصات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #c9a227;
+            --gold-light: #f0d78c;
+            --blue: #1a5fb4;
+            --blue-dark: #0d3a6e;
+            --blue-light: #4a90d9;
+            --dark: #0a1628;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            min-height: 100vh;
+            background: var(--dark);
+            overflow-x: hidden;
+            color: var(--white);
+        }
+
+        /* ===== Animated Background ===== */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(26,95,180,0.15) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        .bg-animation::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(201,162,39,0.1) 0%, transparent 70%);
+            animation: pulse 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* ===== Floating Orbs ===== */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.3;
+            z-index: 0;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--blue);
+            top: 10%;
+            right: 10%;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 200px;
+            height: 200px;
+            background: var(--gold);
+            bottom: 20%;
+            left: 15%;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 150px;
+            height: 150px;
+            background: var(--blue-light);
+            top: 50%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.9); }
+            75% { transform: translate(20px, 10px) scale(1.05); }
+        }
+
+        /* ===== Main Container ===== */
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* ===== Logo Section ===== */
+        .logo-wrapper {
+            position: relative;
+            margin-bottom: 40px;
+            animation: fadeInScale 1s ease;
+        }
+
+        .logo-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            border: 2px solid rgba(201,162,39,0.3);
+            border-radius: 50%;
+            animation: ringRotate 10s linear infinite;
+        }
+
+        .logo-ring::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 1px solid rgba(26,95,180,0.2);
+            border-radius: 50%;
+            animation: ringRotate 15s linear infinite reverse;
+        }
+
+        @keyframes ringRotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .welcome-logo {
+            width: 170px;
+            height: 170px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            padding: 8px;
+            border: 3px solid rgba(201,162,39,0.5);
+            box-shadow: 0 0 40px rgba(201,162,39,0.2), inset 0 0 40px rgba(26,95,180,0.1);
+            position: relative;
+            z-index: 2;
+            transition: all 0.4s ease;
+        }
+
+        .welcome-logo:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 60px rgba(201,162,39,0.4), inset 0 0 40px rgba(26,95,180,0.2);
+            border-color: var(--gold);
+        }
+
+        /* ===== Welcome Text ===== */
+        .welcome-content {
+            text-align: center;
+            max-width: 650px;
+            animation: fadeInUp 1s ease 0.3s both;
+        }
+
+        .greeting {
+            font-size: 1rem;
+            color: var(--gold-light);
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .welcome-title {
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--white), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 25px;
+            line-height: 1.3;
+        }
+
+        .divider {
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--blue-light), var(--gold));
+            margin: 0 auto 25px;
+            border-radius: 2px;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .welcome-message {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.85);
+            line-height: 2;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .pray-hands {
+            font-size: 1.5rem;
+            display: inline-block;
+            animation: pray 2s ease-in-out infinite;
+        }
+
+        @keyframes pray {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* ===== Enter Button ===== */
+        .btn-wrapper {
+            margin-top: 45px;
+            animation: fadeInUp 1s ease 0.6s both;
+        }
+
+        .enter-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 55px;
+            background: transparent;
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: 'Cairo', sans-serif;
+            border: 2px solid var(--gold);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .enter-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(201,162,39,0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .enter-btn:hover::before {
+            left: 100%;
+        }
+
+        .enter-btn:hover {
+            background: rgba(201,162,39,0.15);
+            box-shadow: 0 0 30px rgba(201,162,39,0.3), 0 0 60px rgba(201,162,39,0.1);
+            transform: translateY(-3px);
+            border-color: var(--gold-light);
+        }
+
+        .enter-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .enter-btn:hover .btn-arrow {
+            transform: translateX(-5px);
+        }
+
+        /* ===== Dedication ===== */
+        .dedication {
+            margin-top: 60px;
+            padding: 25px 50px;
+            background: linear-gradient(135deg, rgba(26,95,180,0.15), rgba(201,162,39,0.1));
+            border: 1px solid rgba(201,162,39,0.2);
+            border-radius: 20px;
+            text-align: center;
+            animation: fadeInUp 1s ease 0.9s both;
+            backdrop-filter: blur(10px);
+        }
+
+        .dedication-label {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.6);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .dedication-names {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--gold-light);
+            letter-spacing: 1px;
+        }
+
+        .dedication-separator {
+            color: rgba(255,255,255,0.3);
+            margin: 0 10px;
+        }
+
+        /* ===== Animations ===== */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== Particles ===== */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--gold);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat 12s linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% {
+                transform: translateY(-10vh) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .welcome-logo {
+                width: 140px;
+                height: 140px;
+            }
+            .logo-ring {
+                width: 180px;
+                height: 180px;
+            }
+            .welcome-title {
+                font-size: 2rem;
+            }
+            .welcome-message {
+                font-size: 1.05rem;
+            }
+            .enter-btn {
+                padding: 16px 40px;
+                font-size: 1.1rem;
+            }
+            .dedication {
+                padding: 20px 30px;
+            }
+            .dedication-names {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-logo {
+                width: 120px;
+                height: 120px;
+            }
+            .logo-ring {
+                width: 155px;
+                height: 155px;
+            }
+            .welcome-title {
+                font-size: 1.6rem;
+            }
+            .greeting {
+                font-size: 0.85rem;
+            }
+            .enter-btn {
+                padding: 14px 35px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-animation"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo-wrapper">
+            <div class="logo-ring"></div>
+            <img src="logo1.jpg" alt="المعهد العالي للهندسة والتكنولوجيا" class="welcome-logo">
+        </div>
+
+        <!-- Welcome Text -->
+        <div class="welcome-content">
+            <p class="greeting">✦ مرحباً بكم في ✦</p>
+            <h1 class="welcome-title">ركن الملخصات</h1>
+            <div class="divider"></div>
+            <p class="welcome-message">
+                نتمنى لكم التوفيق والنجاح<br>
+                ولا تنسونا من صالح دعائكم <span class="pray-hands">🤲</span>
+            </p>
+        </div>
+
+        <!-- Enter Button -->
+        <div class="btn-wrapper">
+            <a href="index.html" class="enter-btn">
+                الدخول للموقع
+                <span class="btn-arrow">←</span>
+            </a>
+        </div>
+
+        <!-- Dedication -->
+        <div class="dedication">
+            <p class="dedication-label">إهداء من الطالبين</p>
+            <p class="dedication-names">
+                Mahmoud Elghobashy
+                <span class="dedication-separator">&</span>
+                Ebrahim Elgabarony
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Create floating particles
+        const particlesContainer = document.getElementById('particles');
+        const colors = ['#c9a227', '#1a5fb4', '#4a90d9', '#f0d78c'];
+
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 12 + 's';
+            particle.style.animationDuration = (8 + Math.random() * 8) + 's';
+            particle.style.width = (2 + Math.random() * 4) + 'px';
+            particle.style.height = particle.style.width;
+            particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+            particlesContainer.appendChild(particle);
+        }
+    </script>
+</body>
+</html>
