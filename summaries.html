@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض الملخصات - ركن الملخصات</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .dept-filter-container {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        .dept-filter-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+        }
+        .dept-filter-menu {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        .dept-filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            background: var(--white);
+            color: var(--text-dark);
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dept-filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .dept-filter-btn.active {
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .dept-filter-btn[data-dept="preparatory"] {
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+        .dept-filter-btn[data-dept="preparatory"].active {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        .dept-filter-btn[data-dept="communications"] {
+            border-color: #3498db;
+            color: #3498db;
+        }
+        .dept-filter-btn[data-dept="communications"].active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        .dept-filter-btn[data-dept="civil"] {
+            border-color: #f39c12;
+            color: #f39c12;
+        }
+        .dept-filter-btn[data-dept="civil"].active {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        .dept-filter-btn[data-dept="chemistry"] {
+            border-color: #9b59b6;
+            color: #9b59b6;
+        }
+        .dept-filter-btn[data-dept="chemistry"].active {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+        .dept-filter-btn[data-dept="general"] {
+            border-color: #27ae60;
+            color: #27ae60;
+        }
+        .dept-filter-btn[data-dept="general"].active {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+        .dept-count {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .dept-filter-btn.active .dept-count {
+            background: rgba(255,255,255,0.25);
+            color: white;
+        }
+        .current-dept-header {
+            grid-column: 1 / -1;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            animation: fadeInUp 0.4s ease;
+        }
+        .current-dept-header.preparatory {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+        .current-dept-header.communications {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        .current-dept-header.civil {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+        }
+        .current-dept-header.chemistry {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+        }
+        .current-dept-header.general {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        .current-dept-count {
+            margin-right: auto;
+            background: rgba(255,255,255,0.25);
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        .refresh-btn {
+            background: var(--white);
+            border: 2px solid var(--primary-light);
+            border-radius: var(--radius-sm);
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            margin-right: auto;
+        }
+        .refresh-btn:hover {
+            background: var(--primary-light);
+            transform: rotate(180deg);
+        }
+        .admin-indicator {
+            background: linear-gradient(135deg, var(--secondary), #b8941f);
+            color: var(--white);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            gap: 5px;
+        }
+        .admin-indicator.visible {
+            display: inline-flex;
+        }
+        .edit-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .edit-modal-overlay.active {
+            display: flex;
+        }
+        .edit-modal-content {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 35px;
+            max-width: 550px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .edit-modal-content h3 {
+            font-size: 1.4rem;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .edit-file-display {
+            background: var(--bg-light);
+            padding: 10px 15px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            color: var(--text-medium);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .edit-file-upload {
+            border: 2px dashed #ccc;
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-light);
+            position: relative;
+            font-size: 0.9rem;
+        }
+        .edit-file-upload:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .edit-file-upload input[type="file"] {
+            position: absolute;
+            width: 100%; height: 100%;
+            top: 0; left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .edit-modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .edit-modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .edit-save-btn {
+            background: linear-gradient(135deg, var(--accent), #26a269);
+            color: var(--white);
+        }
+        .edit-save-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(46, 194, 126, 0.3);
+        }
+        .edit-cancel-btn {
+            background: #e0e0e0;
+            color: var(--text-dark);
+        }
+        .edit-cancel-btn:hover {
+            background: #d0d0d0;
+        }
+        @media (max-width: 600px) {
+            .dept-filter-menu { gap: 6px; }
+            .dept-filter-btn { padding: 8px 14px; font-size: 0.85rem; }
+            .current-dept-header { font-size: 1rem; padding: 12px 18px; }
+            .edit-modal-content { padding: 25px 20px; }
+            .edit-modal-buttons { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="main-header">
+            <div class="logos-container">
+                <div class="logo-item">
+                    <img src="logo1.jpg" alt="المعهد العالي للهندسة والتكنولوجيا" class="logo-img">
+                </div>
+                <div class="header-title">
+                    <h1>ركن الملخصات 📚</h1>
+                    <p class="subtitle">ملخصاتي الدراسية</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="page-header">
+                <a href="index.html" class="back-btn">← الرئيسية</a>
+                <h2>📖 الملخصات المتاحة</h2>
+                <span id="adminBadge" class="admin-indicator">👑 أنت مسؤول</span>
+                <button onclick="loadSummaries()" class="refresh-btn" title="تحديث">🔄</button>
+            </div>
+
+            <div class="dept-filter-container">
+                <div class="dept-filter-title">🏛️ اختار القسم اللي عايز تشوف ملخصاته</div>
+                <div class="dept-filter-menu">
+                    <button class="dept-filter-btn" data-dept="preparatory" onclick="filterByDept('preparatory')">
+                        📕 إعدادي <span class="dept-count" id="count-preparatory">0</span>
+                    </button>
+                    <button class="dept-filter-btn" data-dept="communications" onclick="filterByDept('communications')">
+                        📘 اتصالات <span class="dept-count" id="count-communications">0</span>
+                    </button>
+                    <button class="dept-filter-btn" data-dept="civil" onclick="filterByDept('civil')">
+                        📙 مدني <span class="dept-count" id="count-civil">0</span>
+                    </button>
+                    <button class="dept-filter-btn" data-dept="chemistry" onclick="filterByDept('chemistry')">
+                        📗 كيمياء <span class="dept-count" id="count-chemistry">0</span>
+                    </button>
+                    <button class="dept-filter-btn" data-dept="general" onclick="filterByDept('general')">
+                        📓 عام <span class="dept-count" id="count-general">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="summariesList" class="summaries-grid"></div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📂</div>
+                <h3>لا توجد ملخصات حالياً</h3>
+                <p>المحتوى هيتضاف قريباً، ترقبوا!</p>
+            </div>
+        </main>
+
+        <footer class="main-footer">
+            <div class="dedication">
+                <div class="dedication-line"></div>
+                <p class="dedication-text">
+                    إهداء من الطالبين : <br><strong>Mahmoud Elghobashy</strong>  &  <strong>Ebrahim Elgabarony</strong>
+                </p>
+                <div class="dedication-line"></div>
+            </div>
+            <p class="copyright">© 2026 ركن الملخصات - جميع الحقوق محفوظة</p>
+        </footer>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="edit-modal-overlay">
+        <div class="edit-modal-content">
+            <span class="close-btn" onclick="closeEditModal()">&times;</span>
+            <h3>✏️ تعديل الملخص</h3>
+            <form id="editForm" onsubmit="return saveEdit(event)">
+                <input type="hidden" id="editId">
+                <input type="hidden" id="editFileUrl">
+                <input type="hidden" id="editFileName">
+
+                <div class="form-group">
+                    <label for="editTitle">📌 عنوان الملخص</label>
+                    <input type="text" id="editTitle" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editSubject">📚 المادة / التخصص</label>
+                    <input type="text" id="editSubject">
+                </div>
+
+                <div class="form-group">
+                    <label for="editDepartment">🏛️ القسم / الشعبة</label>
+                    <select id="editDepartment" required>
+                        <option value="preparatory">📕 إعدادي</option>
+                        <option value="communications">📘 اتصالات</option>
+                        <option value="civil">📙 مدني</option>
+                        <option value="chemistry">📗 كيمياء</option>
+                        <option value="general">📓 عام</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editDescription">📝 وصف الملخص</label>
+                    <textarea id="editDescription" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>📎 الملف الحالي</label>
+                    <div class="edit-file-display">
+                        <span>📄</span>
+                        <span id="editFileNameDisplay">لا يوجد ملف</span>
+                    </div>
+                    <div class="edit-file-upload" onclick="document.getElementById('editFile').click()">
+                        <input type="file" id="editFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png" onchange="handleEditFileSelect(event)">
+                        <span>📤 اضغط هنا لتغيير الملف (اختياري)</span>
+                    </div>
+                </div>
+
+                <div class="edit-modal-buttons">
+                    <button type="submit" class="edit-save-btn" id="editSubmitBtn">
+                        <span class="btn-text">💾 حفظ التعديلات</span>
+                        <span class="btn-loading" style="display:none;">⏳ جاري الحفظ...</span>
+                    </button>
+                    <button type="button" class="edit-cancel-btn" onclick="closeEditModal()">❌ إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const hasUrl = localStorage.getItem('firebaseDatabaseURL');
+            const badge = document.getElementById('adminBadge');
+            if (hasUrl && badge) {
+                badge.classList.add('visible');
+            }
+        });
+    </script>
+</body>
+</html>
