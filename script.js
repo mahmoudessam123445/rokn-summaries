@@ -3,7 +3,7 @@ const FIREBASE_DATABASE_URL = 'https://rokn-summaries-default-rtdb.firebaseio.co
 
 // ===== Departments =====
 const DEPARTMENTS = {
-    'preparatory': 'إعدادي',
+    'preparatory': 'علوم أساسية',
     'communications': 'اتصالات',
     'civil': 'مدني',
     'chemistry': 'كيمياء',
