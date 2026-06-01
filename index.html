@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ملخصاتي - ركن الملخصات</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header with Logos -->
+        <header class="main-header">
+            <div class="logos-container">
+                <div class="logo-item">
+                    <img src="logo1.jpg" alt="المعهد العالي للهندسة والتكنولوجيا" class="logo-img">
+                </div>
+                <div class="header-title">
+                    <h1 class="a">ركن الملخصات 📚</h1>
+                    <p class="subtitle">ملخصاتي الدراسية</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>أهلاً بيك في موقع الملخصات! 🎓</h2>
+                <p class="welcome-text">
+                    هنا تقدر تشوف كل الملخصات الدراسية المتاحة للتحميل.
+                </p>
+            </div>
+
+            <div class="options-container">
+                <!-- View Summaries Option -->
+                <a href="summaries.html" class="option-card view-card">
+                    <div class="option-icon">👁️</div>
+                    <h3>عرض الملخصات</h3>
+                    <p>تصفح وتحميل كل الملخصات المتاحة</p>
+                    <span class="btn-action">ادخل الآن →</span>
+                </a>
+
+                <!-- Add Summary Option (Password Protected) -->
+                <div class="option-card add-card" onclick="openPasswordModal()">
+                    <div class="option-icon">➕</div>
+                    <h3>إضافة ملخص</h3>
+                    <p>أضف ملخصات جديدة للموقع (للمسؤولين فقط)</p>
+                    <span class="btn-action">ادخل الآن →</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer with Dedication -->
+        <footer class="main-footer">
+            <div class="dedication">
+                <div class="dedication-line"></div>
+                <p class="dedication-text">
+                     إهداء من الطالبين : <br><strong>Mahmoud Elghobashy</strong>  &  <strong>Ebrahim Elgabarony</strong> 
+                </p>
+                <div class="dedication-line"></div>
+            </div>
+            <p class="copyright">© 2026 ركن الملخصات - جميع الحقوق محفوظة</p>
+        </footer>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closePasswordModal()">&times;</span>
+            <div class="modal-icon">🔒</div>
+            <h3>أدخل كلمة المرور</h3>
+            <p>هذه المنطقة محمية بكلمة مرور (للمسؤولين فقط)</p>
+            <input type="password" id="passwordInput" placeholder="اكتب كلمة المرور هنا..." onkeypress="handleKeyPress(event)">
+            <p id="errorMsg" class="error-message"></p>
+            <button class="submit-btn" onclick="checkPassword()">دخول</button>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

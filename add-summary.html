@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة ملخص - ركن الملخصات</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .error-message-box {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border-radius: var(--radius);
+            border: 2px solid var(--danger);
+        }
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+        .error-message-box h3 {
+            color: var(--danger);
+            margin-bottom: 10px;
+        }
+        .error-message-box p {
+            color: var(--text-medium);
+            margin-bottom: 20px;
+        }
+        .admin-only {
+            display: none;
+        }
+        .admin-only.visible {
+            display: block;
+        }
+        .url-hint {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+            display: none;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent), #26a269);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .setup-note {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: var(--radius-sm);
+            padding: 12px 15px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+            color: #0c5460;
+        }
+        .dept-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            margin-right: 5px;
+        }
+        .dept-preparatory { background: #e74c3c; }
+        .dept-communications { background: #3498db; }
+        .dept-civil { background: #f39c12; }
+        .dept-chemistry { background: #9b59b6; }
+        .dept-general { background: #27ae60; }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logos-container">
+                <div class="logo-item">
+                    <img src="logo1.jpg" alt="المعهد العالي للهندسة والتكنولوجيا" class="logo-img">
+                </div>
+                <div class="header-title">
+                    <h1>ركن الملخصات 📚</h1>
+                    <p class="subtitle">ملخصاتي الدراسية</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <a href="index.html" class="back-btn">← الرئيسية</a>
+                <h2>➕ إضافة ملخص جديد</h2>
+            </div>
+
+            <!-- Admin Login Section -->
+            <div id="adminLogin" class="form-container" style="max-width: 500px;">
+                <div style="text-align: center; padding: 30px 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🔐</div>
+                    <h3 style="color: var(--primary-dark); margin-bottom: 10px;">تسجيل دخول المسؤول</h3>
+                    <p style="color: var(--text-medium); margin-bottom: 20px;">أدخل Firebase Database URL عشان تقدر تضيف ملخصات</p>
+
+                    <div class="form-group" style="text-align: right;">
+                        <label>🔗 Firebase Database URL:</label>
+                        <input type="url" id="adminDbUrl" class="token-input" 
+                               placeholder="https://your-project-default-rtdb.firebaseio.com/" 
+                               style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: var(--radius-sm); 
+                                      font-family: monospace; direction: ltr; text-align: left; margin-top: 8px; font-size: 0.85rem;">
+                        <p class="url-hint">
+                            مثال: https://rokn-summaries-default-rtdb.firebaseio.com/
+                        </p>
+                    </div>
+
+                    <button onclick="adminLogin()" class="submit-summary-btn" style="margin-top: 20px;">🔓 دخول</button>
+
+                    <div id="loginError" style="color: var(--danger); margin-top: 15px; font-weight: 600; display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Add Summary Form (Hidden until login) -->
+            <div id="addFormSection" class="admin-only">
+                <div class="form-container" id="formContainer">
+                    <form id="addSummaryForm" onsubmit="return handleSubmit(event)">
+                        <div class="form-group">
+                            <label for="title">📌 عنوان الملخص *</label>
+                            <input type="text" id="title" required placeholder="مثال: ملخص مادة الاتصالات">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject">📚 المادة / التخصص</label>
+                            <input type="text" id="subject" placeholder="مثال: هندسة الاتصالات">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="department">🏛️ القسم / الشعبة *</label>
+                            <select id="department" required>
+                                <option value="" disabled selected>اختر القسم...</option>
+                                <option value="preparatory">📕 إعدادي</option>
+                                <option value="communications">📘 اتصالات</option>
+                                <option value="civil">📙 مدني</option>
+                                <option value="chemistry">📗 كيمياء</option>
+                                <option value="general">📓 عام</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">📝 وصف الملخص</label>
+                            <textarea id="description" rows="3" placeholder="اكتب وصف مختصر للملخص..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="file">📎 ارفع الملف *</label>
+                            <div class="file-upload-area" onclick="document.getElementById('file').click()">
+                                <input type="file" id="file" required accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
+                                <div class="upload-placeholder" id="uploadPlaceholder">
+                                    <div class="upload-icon">📤</div>
+                                    <p>اضغط هنا أو اسحب الملف</p>
+                                    <span class="file-types">PDF, Word, PowerPoint, صور</span>
+                                </div>
+                                <div class="file-info" id="fileInfo" style="display: none;">
+                                    <span class="file-icon">📄</span>
+                                    <span class="file-name" id="fileName"></span>
+                                    <span class="file-size" id="fileSize"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill">0%</div>
+                        </div>
+
+                        <button type="submit" class="submit-summary-btn" id="submitBtn">
+                            <span class="btn-text">✅ إضافة الملخص</span>
+                            <span class="btn-loading" style="display:none;">⏳ جاري الرفع...</span>
+                        </button>
+                    </form>
+
+                    <div id="successMessage" class="success-message" style="display:none;">
+                        <div class="success-icon">🎉</div>
+                        <h3>تم إضافة الملخص بنجاح!</h3>
+                        <p>الملخص بقى متاح للعرض والتحميل من أي مكان.</p>
+                        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <a href="summaries.html" class="view-summaries-btn">👁️ عرض الملخصات</a>
+                            <button onclick="resetForm()" class="view-summaries-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border: none; cursor: pointer;">➕ إضافة ملخص تاني</button>
+                        </div>
+                    </div>
+
+                    <div id="errorMessage" class="error-message-box" style="display:none;">
+                        <div class="error-icon">❌</div>
+                        <h3>حدث خطأ!</h3>
+                        <p id="errorText">مش قادر أرفع الملخص. جرب تاني.</p>
+                        <button onclick="resetForm()" class="view-summaries-btn" style="margin-top: 15px; background: var(--danger);">🔄 حاول مرة أخرى</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="dedication">
+                <div class="dedication-line"></div>
+                <p class="dedication-text">
+                     إهداء من الطالبين : <br><strong>Mahmoud Elghobashy</strong>  &  <strong>Ebrahim Elgabarony</strong> 
+                </p>
+                <div class="dedication-line"></div>
+            </div>
+            <p class="copyright">© 2026 ركن الملخصات - جميع الحقوق محفوظة</p>
+        </footer>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script>
+        // ===== Cloudinary Configuration =====
+        const CLOUDINARY_CLOUD_NAME = 'duwg52apm';
+        const CLOUDINARY_UPLOAD_PRESET = 'rokn_summaries';
+
+        let selectedFile = null;
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const hasUrl = localStorage.getItem('firebaseDatabaseURL');
+            if (hasUrl) {
+                showAdminForm();
+            }
+        });
+
+        function showAdminForm() {
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('addFormSection').classList.add('visible');
+        }
+
+        async function adminLogin() {
+            const dbUrl = document.getElementById('adminDbUrl').value.trim();
+            const errorDiv = document.getElementById('loginError');
+
+            if (!dbUrl) {
+                errorDiv.textContent = '❌ لازم تدخل Firebase Database URL!';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!dbUrl.startsWith('https://') || !dbUrl.includes('firebaseio.com')) {
+                errorDiv.textContent = '❌ الرابط مش صحيح';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const cleanUrl = dbUrl.endsWith('/') ? dbUrl : dbUrl + '/';
+
+            errorDiv.textContent = '⏳ جاري التحقق...';
+            errorDiv.style.display = 'block';
+            errorDiv.style.color = 'var(--primary)';
+
+            try {
+                const response = await fetch(cleanUrl + 'summaries.json');
+                if (response.ok || response.status === 404) {
+                    localStorage.setItem('firebaseDatabaseURL', cleanUrl);
+                    showAdminForm();
+                } else {
+                    const error = await response.json();
+                    errorDiv.textContent = '❌ ' + (error.error || 'مشكلة في الاتصال');
+                    errorDiv.style.color = 'var(--danger)';
+                }
+            } catch (error) {
+                errorDiv.textContent = '❌ خطأ: ' + error.message;
+                errorDiv.style.color = 'var(--danger)';
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            selectedFile = file;
+            document.getElementById('uploadPlaceholder').style.display = 'none';
+            document.getElementById('fileInfo').style.display = 'flex';
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            if (!selectedFile) {
+                alert('يرجى اختيار ملف أولاً!');
+                return false;
+            }
+
+            const department = document.getElementById('department').value;
+            if (!department) {
+                alert('يرجى اختيار القسم!');
+                return false;
+            }
+
+            // Check Cloudinary config
+            if (CLOUDINARY_CLOUD_NAME === 'YOUR_CLOUD_NAME') {
+                showError('❌ لازم تضبط Cloudinary أولاً!');
+                return false;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            const btnText = btn.querySelector('.btn-text');
+            const btnLoading = btn.querySelector('.btn-loading');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline';
+            btn.disabled = true;
+            progressBar.style.display = 'block';
+
+            const dbUrl = localStorage.getItem('firebaseDatabaseURL');
+
+            if (!dbUrl) {
+                showError('❌ مفيش Firebase URL. سجل دخول تاني.');
+                return false;
+            }
+
+            try {
+                // Step 1: Upload to Cloudinary
+                console.log('Uploading to Cloudinary...');
+                progressFill.style.width = '30%';
+                progressFill.textContent = '30%';
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                formData.append('folder', 'rokn_summaries');
+
+                const cloudinaryResponse = await fetch(
+                    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
+                    {
+                        method: 'POST',
+                        body: formData
+                    }
+                );
+
+                if (!cloudinaryResponse.ok) {
+                    const error = await cloudinaryResponse.json();
+                    throw new Error(error.error?.message || 'Cloudinary upload failed');
+                }
+
+                const cloudinaryResult = await cloudinaryResponse.json();
+                console.log('Cloudinary result:', cloudinaryResult);
+
+                progressFill.style.width = '70%';
+                progressFill.textContent = '70%';
+
+                // Step 2: Save to Firebase Database
+                const fileUrl = cloudinaryResult.secure_url;
+
+                const summary = {
+                    title: document.getElementById('title').value.trim(),
+                    subject: document.getElementById('subject').value.trim(),
+                    department: document.getElementById('department').value,
+                    description: document.getElementById('description').value.trim(),
+                    fileName: selectedFile.name,
+                    fileUrl: fileUrl,
+                    fileType: selectedFile.type,
+                    fileSize: selectedFile.size,
+                    cloudinaryPublicId: cloudinaryResult.public_id,
+                    date: new Date().toLocaleDateString('ar-EG'),
+                    uploadedAt: new Date().toISOString()
+                };
+
+                const dbResponse = await fetch(dbUrl + 'summaries.json', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(summary)
+                });
+
+                if (!dbResponse.ok) {
+                    throw new Error('Failed to save to database');
+                }
+
+                progressFill.style.width = '100%';
+                progressFill.textContent = '100%';
+
+                // Show success
+                document.getElementById('addSummaryForm').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('errorMessage').style.display = 'none';
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                showError('❌ ' + error.message);
+            } finally {
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                btn.disabled = false;
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressFill.style.width = '0%';
+                    progressFill.textContent = '0%';
+                }, 1000);
+            }
+
+            return false;
+        }
+
+        function showError(message) {
+            document.getElementById('addSummaryForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorText').textContent = message;
+        }
+
+        function resetForm() {
+            document.getElementById('addSummaryForm').reset();
+            document.getElementById('addSummaryForm').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('uploadPlaceholder').style.display = 'block';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('progressBar').style.display = 'none';
+            selectedFile = null;
+        }
+
+        // Drag and drop support
+        const uploadArea = document.querySelector('.file-upload-area');
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    document.getElementById('file').files = files;
+                    handleFileSelect({ target: { files: files } });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
